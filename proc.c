@@ -263,6 +263,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  curproc->numSyscalls = 0;
   sched();
   panic("zombie exit");
 }
@@ -531,4 +532,21 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+//Winson: Adding functionality to count number of proccess for sys info
+int countNumberOfProcesses(void)
+{
+	struct proc *p;
+	int count = 0;
+
+	acquire(&ptable.lock);
+
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+		if(p->state != UNUSED)
+			count++;
+	}
+	release(&ptable.lock);
+	return count;
 }

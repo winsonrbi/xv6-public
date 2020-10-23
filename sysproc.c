@@ -89,3 +89,27 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//Winson: Add syscall sys_info function
+int
+sys_info(void)
+{
+	int param;
+	if(argint(0, &param) < 0)
+		return -1;
+	if(param == 1)
+		return countNumberOfProcesses();
+	else if(param == 2)
+	{
+		struct proc *curproc = myproc();
+		return curproc->numSyscalls;
+	}
+	else if(param == 3)
+	{
+		struct proc *curproc = myproc();
+		//Winson: Return page size by taking current process memory and dividing by page size
+		return (curproc->sz)/4096;
+	}
+	else
+		return param;	
+}	
