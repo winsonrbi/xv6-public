@@ -15,9 +15,6 @@ main(void)
 		wait();
 		printf(1,"Testing after child process is terminated, number of processes running now is %d\n",info(1));
 		printf(1,"Testing lab 1 syscall info total number of syscalls %d\n",info(2));
-		//account for count from zero
-		counter = counter + 1;
-		printf(1,"Testing after allocating int array of size %d, total number of memory pages %d\n",counter,info(3));
 		printf(1,"Printing pid %d \n", getpid());
 		
 	}
