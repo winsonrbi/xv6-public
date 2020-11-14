@@ -8,6 +8,7 @@ struct cpu {
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
   struct proc *proc;           // The process running on this cpu or null
+  int global_ticket_sum;
 };
 
 extern struct cpu cpus[NCPU];
@@ -49,6 +50,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int num_tickets;             // Tickets for Lottery Scheduling
 };
 
 // Process memory is laid out contiguously, low addresses first:

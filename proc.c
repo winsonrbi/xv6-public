@@ -88,7 +88,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->num_tickets = 10;
+  c->global_tickets = c->global_tickets + 10;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -332,6 +333,11 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+	//calculate rand value
+	int current_ticket_sum = 0;
+	int global_ticket_sum = c-> global_ticket_sum;
+	srand(1);
+	int random_value = rand()%global_ticket_sum;	
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;

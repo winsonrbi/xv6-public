@@ -89,3 +89,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int sys_settickets(void)
+{
+	int param;
+	struct proc *p = myproc();
+	struct cpu *c = mycpu();
+	if(argint(0,&param) < 0)
+		return -1
+	if(p->num_tickets != 0)
+	{
+		//Remove all old tickets from global before adding new ticket amount
+		c->global_ticket_sum = c->global_ticket_sum - (p->num_tickets);
+	}
+	p->num_tickets = param;
+	//add the new ticket amount back to global amount
+	c->global_ticket_sum = c->global_ticket_sum + param;
+	return param
+}
