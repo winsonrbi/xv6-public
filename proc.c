@@ -91,7 +91,6 @@ found:
   p->tickets = 10;
   p->num_syscalls = 0;
   release(&ptable.lock);
-
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
@@ -326,7 +325,7 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+  int lottery_number = 420;
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -334,43 +333,48 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 	//psuedo - random number generation
-	int total_num_syscalls = 0;
+	int total_num_syscalls = 13818137;
 	int total_num_tickets = 0;
 	int current_num_tickets = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 	  total_num_tickets = total_num_tickets + p->tickets;
-      total_num_syscalls = total_num_syscalls + p->num_syscalls * 420;
+      total_num_syscalls = total_num_syscalls + p->num_syscalls * lottery_number;
 	  total_num_syscalls ^= total_num_syscalls << 13;
 	  total_num_syscalls ^= total_num_syscalls >> 17;
 	  total_num_syscalls ^= total_num_syscalls << 5;
     }
-	int lottery_number = total_num_syscalls % total_num_tickets;
+	
+    if(total_num_tickets == 0){
+	  release(&ptable.lock);
+	  continue;
+    }
+	//If we dont have any runnable, just skip or we will get an error
+	//Was getting negative lottery numbers, perform checks to make sure not negative due to overflow or something
+	if(total_num_syscalls < 0)
+		total_num_syscalls = -1 * total_num_syscalls;
+	lottery_number = total_num_syscalls % total_num_tickets;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       current_num_tickets = current_num_tickets + p->tickets;
-      if(current_num_tickets > lottery_number){
+      if(current_num_tickets >= lottery_number ){
 		  c->proc = p;
 		  switchuvm(p);
 		  p->state = RUNNING;
 
 		  swtch(&(c->scheduler), p->context);
 		  switchkvm();
-
 		  // Process is done running for now.
 		  // It should have changed its p->state before coming back.
 		  c->proc = 0;
-		  release(&ptable.lock);
-		  break;
 	  }
     }
-
+    release(&ptable.lock);
   }
 }
 
