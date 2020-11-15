@@ -4,8 +4,8 @@
 int main(int argc, char *argv[])
 {
 	int num_tickets = settickets(30);
+	int init_cpu_exec = countglobalexec();
 	// write your own function here
-	printf(1,"Number of tickets for prog1 %d\n",num_tickets);
 	int i,k;
 	const int loop=43000;
 	for(i=0;i<loop;i++)
@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
 				asm("nop");
 			}
 	}
-	printf(1,"Number of executions for prog1 %d\n",countexec());
+	int proc_count = countexec();
+	int total_cycles =  (countglobalexec()-init_cpu_exec);
+	printf(1,"Number of executions for prog1 %d and total CPU executions since prog1 start %d\n",proc_count, total_cycles);
 	exit();
 }

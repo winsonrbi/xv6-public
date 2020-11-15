@@ -8,6 +8,7 @@ struct cpu {
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
   struct proc *proc;           // The process running on this cpu or null
+  int exec_count;         // Count number of executions for lotto
 };
 
 extern struct cpu cpus[NCPU];
@@ -52,6 +53,7 @@ struct proc {
   int tickets;
   int num_syscalls;
   int exec_count;
+  int global_exec_count;
 };
 
 // Process memory is laid out contiguously, low addresses first:

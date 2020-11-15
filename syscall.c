@@ -105,6 +105,8 @@ extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_settickets(void);
 extern int sys_countexec(void);
+extern int sys_countglobalexec(void);
+
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -129,6 +131,7 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_settickets] sys_settickets,
 [SYS_countexec] sys_countexec,
+[SYS_countglobalexec] sys_countglobalexec
 };
 
 void

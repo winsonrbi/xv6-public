@@ -105,3 +105,10 @@ sys_countexec(void)
 {
 	return myproc()->exec_count;
 }
+
+int
+sys_countglobalexec(void)
+{
+	return myproc()->global_exec_count;
+
+}

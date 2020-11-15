@@ -25,6 +25,7 @@ int sleep(int);
 int uptime(void);
 int settickets(int);
 int countexec(void);
+int countglobalexec(void);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

@@ -326,6 +326,7 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  c->exec_count = 0;
   int lottery_number = 420;
   for(;;){
     // Enable interrupts on this processor.
@@ -356,6 +357,7 @@ scheduler(void)
 	if(total_num_syscalls < 0)
 		total_num_syscalls = -1 * total_num_syscalls;
 	lottery_number = total_num_syscalls % total_num_tickets;
+	//cprintf("Lottery number %d, total tickets %d, and total sys_call %d\n",lottery_number,total_num_tickets,total_num_syscalls);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -365,6 +367,8 @@ scheduler(void)
       current_num_tickets = current_num_tickets + p->tickets;
       if(current_num_tickets >= lottery_number ){
 		  p->exec_count = p->exec_count + 1;
+		  c->exec_count = c->exec_count + 1;
+          p->global_exec_count = c->exec_count;
 		  c->proc = p;
 		  switchuvm(p);
 		  p->state = RUNNING;
