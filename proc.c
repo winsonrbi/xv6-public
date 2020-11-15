@@ -89,6 +89,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->tickets = 10;
+  p->exec_count = 0;
   p->num_syscalls = 0;
   release(&ptable.lock);
   // Allocate kernel stack.
@@ -363,6 +364,7 @@ scheduler(void)
       // before jumping back to us.
       current_num_tickets = current_num_tickets + p->tickets;
       if(current_num_tickets >= lottery_number ){
+		  p->exec_count = p->exec_count + 1;
 		  c->proc = p;
 		  switchuvm(p);
 		  p->state = RUNNING;

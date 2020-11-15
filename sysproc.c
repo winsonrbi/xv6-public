@@ -97,5 +97,11 @@ sys_settickets(void)
 	if(argint(0,&param) < 0)
 		return -1;
 	myproc()->tickets = param;
-	return param;
+	return myproc()->tickets;
+}
+
+int
+sys_countexec(void)
+{
+	return myproc()->exec_count;
 }
