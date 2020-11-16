@@ -3,8 +3,7 @@
 #include "user.h"
 int main(int argc, char *argv[])
 {
-	int num_tickets = settickets(10);
-	int init_cpu_exec = countglobalexec();
+	int num_tickets = settickets(100);
 	// write your own function here
 	
 	printf(1,"Number of tickets for prog3 %d\n",num_tickets);
@@ -18,8 +17,6 @@ int main(int argc, char *argv[])
 				asm("nop");
 			}
 	}
-	int proc_count = countexec();
-	int total_cycles =  (countglobalexec()-init_cpu_exec);
-	printf(1,"Number of executions for prog3 %d and total CPU executions since prog3 start %d\n",proc_count, total_cycles);
+	printf(1,"Number of executions for prog3 %d and total CPU executions since prog3 start %d\n",countexec(), countglobalexec());
 	exit();
 }

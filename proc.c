@@ -88,7 +88,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->tickets = 10;
+  p->stride = (float) 1.0/10;
+  p->stride_counter = 0.0;
   p->exec_count = 0;
   p->num_syscalls = 0;
   release(&ptable.lock);
@@ -327,7 +328,6 @@ scheduler(void)
   struct cpu *c = mycpu();
   c->proc = 0;
   c->exec_count = 0;
-  int lottery_number = 420;
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -335,51 +335,46 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 	//psuedo - random number generation
-	int total_num_syscalls = 13818137;
-	int total_num_tickets = 0;
-	int current_num_tickets = 0;
+	double smallest_counter = -1.0;
+	struct proc *smallest = &ptable.proc[0];
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-	  total_num_tickets = total_num_tickets + p->tickets;
-      total_num_syscalls = total_num_syscalls + p->num_syscalls * lottery_number;
-	  total_num_syscalls ^= total_num_syscalls << 13;
-	  total_num_syscalls ^= total_num_syscalls >> 17;
-	  total_num_syscalls ^= total_num_syscalls << 5;
-    }
-	
-    if(total_num_tickets == 0){
-	  release(&ptable.lock);
-	  continue;
-    }
-	//If we dont have any runnable, just skip or we will get an error
-	//Was getting negative lottery numbers, perform checks to make sure not negative due to overflow or something
-	if(total_num_syscalls < 0)
-		total_num_syscalls = -1 * total_num_syscalls;
-	lottery_number = total_num_syscalls % total_num_tickets;
-	//cprintf("Lottery number %d, total tickets %d, and total sys_call %d\n",lottery_number,total_num_tickets,total_num_syscalls);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      current_num_tickets = current_num_tickets + p->tickets;
-      if(current_num_tickets >= lottery_number ){
-		  p->exec_count = p->exec_count + 1;
-		  c->exec_count = c->exec_count + 1;
-          p->global_exec_count = c->exec_count;
-		  c->proc = p;
-		  switchuvm(p);
-		  p->state = RUNNING;
-
-		  swtch(&(c->scheduler), p->context);
-		  switchkvm();
-		  // Process is done running for now.
-		  // It should have changed its p->state before coming back.
-		  c->proc = 0;
+	  //find proc with smallest stride
+	  if(smallest_counter == -1)
+      {
+		smallest = p;
+		smallest_counter = p->stride_counter;
+	  }
+	  else{
+		if(smallest_counter > p->stride_counter)
+		{
+		 	smallest = p;		
+			smallest_counter = p->stride_counter;
+		}
 	  }
     }
+	if(smallest_counter == -1)
+	{
+    	release(&ptable.lock);
+		continue;	
+	}	
+	else
+	{
+	  smallest->exec_count = smallest->exec_count + 1;
+	  c->exec_count = c->exec_count + 1;
+	  smallest->global_exec_count = c->exec_count;
+	  smallest->stride_counter = smallest->stride_counter + smallest->stride;
+	  c->proc = smallest;
+	  switchuvm(smallest);
+	  smallest->state = RUNNING;
+
+	  swtch(&(c->scheduler), smallest->context);
+	  switchkvm();
+	  // Process is done running for now.
+	  // It should have changed its p->state before coming back.
+	  c->proc = 0;
+	}
     release(&ptable.lock);
   }
 }

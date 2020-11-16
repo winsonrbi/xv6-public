@@ -34,7 +34,19 @@ printint(int fd, int xx, int base, int sgn)
   while(--i >= 0)
     putc(fd, buf[i]);
 }
-
+// MOD-2 : Added printf for floats
+// Borrowed float printing code from https://github.com/shreshthtuli/xv6/blob/master/printf.c
+void
+printfloat(int fd, float xx)
+{
+  int beg=(int)(xx);
+	int fin=(int)(xx*100)-beg*100;
+  printint(fd, beg, 10, 1);
+  putc(fd, '.');
+	if(fin<10)
+    putc(fd, '0');
+	printint(fd, fin, 10, 1);
+}
 // Print to the given fd. Only understands %d, %x, %p, %s.
 void
 printf(int fd, const char *fmt, ...)
@@ -72,7 +84,10 @@ printf(int fd, const char *fmt, ...)
       } else if(c == 'c'){
         putc(fd, *ap);
         ap++;
-      } else if(c == '%'){
+      } else if(c == 'f'){ // MOD-2
+        printfloat(fd, (float)*ap);
+        ap++;
+	  }	else if(c == '%'){
         putc(fd, c);
       } else {
         // Unknown % sequence.  Print it to draw attention.
