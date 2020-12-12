@@ -535,8 +535,9 @@ procdump(void)
 
 int
 clone(void *stack, int size)
-{
+{ 
   int i, pid;
+  //uint stacksize;
   struct proc *np;
   struct proc *curproc = myproc();
 
@@ -544,30 +545,32 @@ clone(void *stack, int size)
   if((np = allocproc()) == 0){
     return -1;
   }
-
+  if(((uint)stack % PGSIZE) != 0 || stack == 0) {
+    cprintf("stack fail\n");
+    return -1;
+  }
   np->pgdir = curproc->pgdir;
   np->sz = curproc->sz;
   np->parent = curproc->parent;
   *np->tf = *curproc->tf;
 
   // Clear %eax so that fork returns 0 in the child.
-  np->tf->eax = 0;
-  //move to bottom of stack
-  np->tf->esp = (unsigned int)stack - size;  
+  void *down_copy = (void*)curproc->tf->ebp +16;
+  void *top_copy = (void*)curproc->tf->esp;
+ // cprintf("esp :%d ebp %d\n",top_copy,down_copy);
+  uint copysize = (uint)(down_copy - top_copy);
+  np->tf->esp = (uint) (stack - copysize);
+  np->tf->ebp = (uint) (stack -16);
+ // cprintf("new stack esp %d edp: %d\n",newp->tf->esp,newp->tf->ebp);
+  memmove(stack-copysize,top_copy,copysize);
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
-      np->ofile[i] = curproc->ofile[i];
-  np->cwd = curproc->cwd;
-
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-
-  pid = np->pid;
-
   acquire(&ptable.lock);
-
+  pid = np->pid;
   np->state = RUNNABLE;
-
   release(&ptable.lock);
-
   return pid;
 }
