@@ -538,6 +538,7 @@ int clone(void){
   struct proc *np;
   struct proc *curproc = myproc();
   
+
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
