@@ -533,44 +533,54 @@ procdump(void)
   }
 }
 
-int
-clone(void *stack, int size)
-{ 
+int clone(void){
   int i, pid;
-  //uint stacksize;
   struct proc *np;
   struct proc *curproc = myproc();
-
+  
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
-  if(((uint)stack % PGSIZE) != 0 || stack == 0) {
-    cprintf("stack fail\n");
-    return -1;
-  }
+  // Copy process state from proc.
+  uint payLoad[4];
+  void(*start_routine)(void*);
+  int size = PGSIZE;
+  void *stack = 0;
+  void* arg;
+  
+  if(argptr(1, (void*)&start_routine, sizeof(start_routine) < 0))
+        return -1;
+  if(argptr(0, (void*)&stack, sizeof(stack) < 0))
+            return -1;
+  if(argptr(2, (void*)&arg, sizeof(arg) < 0)){
+            return -1;
+    }
   np->pgdir = curproc->pgdir;
   np->sz = curproc->sz;
-  np->parent = curproc->parent;
+  np->parent = curproc;
   *np->tf = *curproc->tf;
+  np->tf->esp = (uint)stack + size;
 
+  payLoad[0] = 0xffffffff;
+  payLoad[1] = (uint)arg;
+  np->tf->esp -= 8;
+  copyout(np->pgdir, np->tf->esp, &payLoad, 8);
   // Clear %eax so that fork returns 0 in the child.
-  void *down_copy = (void*)curproc->tf->ebp +16;
-  void *top_copy = (void*)curproc->tf->esp;
- // cprintf("esp :%d ebp %d\n",top_copy,down_copy);
-  uint copysize = (uint)(down_copy - top_copy);
-  np->tf->esp = (uint) (stack - copysize);
-  np->tf->ebp = (uint) (stack -16);
- // cprintf("new stack esp %d edp: %d\n",newp->tf->esp,newp->tf->ebp);
-  memmove(stack-copysize,top_copy,copysize);
+  np->tf->eax = 0;
+  np->tf->ebp = (uint)stack;
+  np->tf->eip = (uint)start_routine;
+
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
+
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-  acquire(&ptable.lock);
   pid = np->pid;
+  acquire(&ptable.lock);
   np->state = RUNNABLE;
   release(&ptable.lock);
   return pid;
+
 }

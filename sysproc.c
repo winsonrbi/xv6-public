@@ -93,9 +93,5 @@ sys_uptime(void)
 int 
 sys_clone(void)
 {
-  int stack;
-  int size;
-  argint(0, &stack);
-  argint(1, &size);
-  return clone((void *)stack,size);
+  return clone();;
 }
