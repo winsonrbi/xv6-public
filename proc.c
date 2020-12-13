@@ -543,7 +543,7 @@ int clone(void){
     return -1;
   }
   // Copy process state from proc.
-  uint payLoad[4];
+  uint stacksetup[2];
   void(*start_routine)(void*);
   int size = PGSIZE;
   void *stack = 0;
@@ -562,10 +562,10 @@ int clone(void){
   *np->tf = *curproc->tf;
   np->tf->esp = (uint)stack + size;
 
-  payLoad[0] = 0xffffffff;
-  payLoad[1] = (uint)arg;
+  stacksetup[0] = 0xffffffff;
+  stacksetup[1] = (uint)arg;
   np->tf->esp -= 8;
-  copyout(np->pgdir, np->tf->esp, &payLoad, 8);
+  copyout(np->pgdir, np->tf->esp, &stacksetup, 8);
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
   np->tf->ebp = (uint)stack;
