@@ -549,10 +549,10 @@ int clone(void){
   void *stack = 0;
   void* arg;
   
-  if(argptr(1, (void*)&start_routine, sizeof(start_routine) < 0))
-        return -1;
   if(argptr(0, (void*)&stack, sizeof(stack) < 0))
             return -1;
+  if(argptr(1, (void*)&start_routine, sizeof(start_routine) < 0))
+        return -1;
   if(argptr(2, (void*)&arg, sizeof(arg) < 0)){
             return -1;
     }
